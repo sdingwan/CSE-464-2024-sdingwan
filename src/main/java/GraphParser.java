@@ -80,7 +80,7 @@ public class GraphParser {
             g.add(mutNode(source).addLink(mutNode(target)));
         }
 
-        // Export the graph to the desired format (PNG)
+        // Export the graph to PNG format
         Graphviz.fromGraph(g).render(Format.PNG).toFile(new File(filePath));
     }
 
