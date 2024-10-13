@@ -30,6 +30,19 @@ public class GraphParser {
         }
     }
 
+    // Feature 2: Adding nodes
+    public void addNode(String label) {
+        if (!graph.containsVertex(label)) {
+            graph.addVertex(label);
+        }
+    }
+
+    public void addNodes(String[] labels) {
+        for (String label : labels) {
+            addNode(label);
+        }
+    }
+
     // Add the main method for testing
     public static void main(String[] args) throws IOException {
         GraphParser parser = new GraphParser();
