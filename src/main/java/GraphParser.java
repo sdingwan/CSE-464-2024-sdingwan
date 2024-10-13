@@ -43,6 +43,13 @@ public class GraphParser {
         }
     }
 
+    // Feature 3: Adding edges
+    public void addEdge(String srcLabel, String dstLabel) {
+        if (!graph.containsEdge(srcLabel, dstLabel)) {
+            graph.addEdge(srcLabel, dstLabel);
+        }
+    }
+
     // Add the main method for testing
     public static void main(String[] args) throws IOException {
         GraphParser parser = new GraphParser();
