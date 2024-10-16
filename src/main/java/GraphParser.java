@@ -70,7 +70,7 @@ public class GraphParser {
         sb.append("}\n");
         Files.write(Paths.get(filePath), sb.toString().getBytes());
     }
-
+    // Comment for push
     public void outputGraphics(String filePath, String format) throws IOException {
         MutableGraph g = mutGraph("example").setDirected(true);
         for (DefaultEdge edge : graph.edgeSet()) {
