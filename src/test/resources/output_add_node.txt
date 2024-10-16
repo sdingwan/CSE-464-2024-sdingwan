@@ -1,6 +1,6 @@
-Graph:
+Graph: 
 Nodes: 4
-Edges: 3
+Edges: 2
 A -> B
 B -> C
-C -> D
+Z

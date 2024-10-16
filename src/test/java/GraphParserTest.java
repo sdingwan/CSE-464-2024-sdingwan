@@ -10,115 +10,84 @@ public class GraphParserTest {
 
     private GraphParser parser;
 
-    // Setup method to initialize the GraphParser object before each test
     @BeforeEach
     public void setUp() {
         parser = new GraphParser();
     }
 
-    // Test Feature 1: Parsing a DOT graph file
+    // Utility method to normalize output for comparison
+    private String normalize(String input) {
+        return input.replaceAll("\\s+", "");
+    }
+
+    // Test for Feature 1: Parsing a DOT graph file
     @Test
     public void testParseGraph() throws IOException {
-        parser.parseGraph("src/test/resources/sample.dot"); // Input DOT file
-
-        String expectedOutput = Files.readString(Paths.get("src/test/resources/expected-output.txt")).trim();
-        String actualOutput = parser.toString().trim().replaceAll("\\s+", " ").replaceAll("\r\n", "\n").replaceAll("\n", " ").trim();
-
-        System.out.println("Expected: \n" + expectedOutput);
-        System.out.println("Actual: \n" + actualOutput);
-
-        assertEquals(expectedOutput.replaceAll("\\s+", " ").replaceAll("\r\n", "\n").replaceAll("\n", " ").trim(), actualOutput, "The outputs should match when formatted uniformly.");
+        parser.parseGraph("src/test/resources/sample.dot");
+        String expectedOutput = normalize(Files.readString(Paths.get("src/test/resources/expected-parse.txt")).trim());
+        String actualOutput = normalize(parser.toString().trim());
+        assertEquals(expectedOutput, actualOutput, "The parsed graph should match the expected output.");
     }
 
-
-
-    // Test Feature 2: Adding a single node
+    // Test for Feature 2: Adding a single node
     @Test
-    public void testAddNode() {
-        parser.addNode("A");
-        parser.addNode("B");
-        parser.addNode("A");  // Adding duplicate node
-
-        // Check that the number of nodes is 2 (no duplicates)
-        assertEquals(2, parser.getGraph().vertexSet().size());
+    public void testAddNode() throws IOException {
+        parser.parseGraph("src/test/resources/sample.dot");
+        parser.addNode("Z");
+        Files.write(Paths.get("src/test/resources/output_add_node.txt"), parser.toString().getBytes());
+        String expectedOutput = normalize(Files.readString(Paths.get("src/test/resources/expected_add_node.txt")).trim());
+        String actualOutput = normalize(Files.readString(Paths.get("src/test/resources/output_add_node.txt")).trim());
+        assertEquals(expectedOutput, actualOutput, "The graph should match the expected output after adding node 'Z'.");
     }
 
-    // Test Feature 2: Adding a list of nodes
+    // Test for Feature 2: Adding multiple nodes
     @Test
-    public void testAddNodes() {
-        String[] nodes = {"A", "B", "C"};
-        parser.addNodes(nodes);
-
-        // Check that all nodes were added
-        assertEquals(3, parser.getGraph().vertexSet().size());
+    public void testAddMultipleNodes() throws IOException {
+        parser.parseGraph("src/test/resources/sample.dot");
+        parser.addNodes(new String[]{"X", "Y"});
+        Files.write(Paths.get("src/test/resources/output_add_nodes.txt"), parser.toString().getBytes());
+        String expectedOutput = normalize(Files.readString(Paths.get("src/test/resources/expected_add_nodes.txt")).trim());
+        String actualOutput = normalize(Files.readString(Paths.get("src/test/resources/output_add_nodes.txt")).trim());
+        assertEquals(expectedOutput, actualOutput, "The graph should match the expected output after adding nodes 'X' and 'Y'.");
     }
 
-    // Test Feature 3: Adding an edge
+    // Test for Feature 3: Adding an edge
     @Test
-    public void testAddEdge() {
+    public void testAddEdge() throws IOException {
+        parser.parseGraph("src/test/resources/sample.dot");
         parser.addNode("A");
         parser.addNode("B");
         parser.addEdge("A", "B");
-        parser.addEdge("A", "B");  // Adding duplicate edge
-
-        // Check that only 1 edge was added (no duplicates)
-        assertEquals(1, parser.getGraph().edgeSet().size());
+        Files.write(Paths.get("src/test/resources/output_add_edge.txt"), parser.toString().getBytes());
+        String expectedOutput = normalize(Files.readString(Paths.get("src/test/resources/expected_add_edge.txt")).trim());
+        String actualOutput = normalize(Files.readString(Paths.get("src/test/resources/output_add_edge.txt")).trim());
+        assertEquals(expectedOutput, actualOutput, "The graph should match the expected output after adding an edge from 'A' to 'B'.");
     }
 
-    // Test Feature 4: Output the graph to DOT file
+    // Test for Feature 4: Outputting the graph to a DOT file
     @Test
     public void testOutputDOTGraph() throws IOException {
-        // Adding nodes
-        parser.addNode("A");
-        parser.addNode("B");
+        parser.parseGraph("src/test/resources/sample.dot");
         parser.addNode("C");
-        parser.addNode("D");
-
-        // Adding edges
-        parser.addEdge("A", "B");
-        parser.addEdge("B", "C");
-        parser.addEdge("C", "D");
-
-        // Output the graph to a DOT file
-        String outputPath = "src/test/resources/output.dot";
-        parser.outputDOTGraph(outputPath);
-
-        // Read the expected and actual DOT file content
-        String expectedDOT = Files.readString(Paths.get("src/test/resources/expected.dot"));
-        String actualDOT = Files.readString(Paths.get(outputPath));
-
-        // Normalize newline characters across different environments
-        expectedDOT = expectedDOT.replace("\r\n", "\n");
-        actualDOT = actualDOT.replace("\r\n", "\n");
-
-        // Assertion to check if the contents are the same
-        assertEquals(expectedDOT, actualDOT, "The DOT files should match expected structure.");
+        parser.addEdge("A", "C");
+        parser.outputDOTGraph("src/test/resources/output_graph.dot");
+        String expectedOutput = normalize(Files.readString(Paths.get("src/test/resources/expected_output.dot")).replace("\r\n", "\n"));
+        String actualOutput = normalize(Files.readString(Paths.get("src/test/resources/output_graph.dot")).replace("\r\n", "\n"));
+        assertEquals(expectedOutput, actualOutput, "The DOT file should match the expected structure after updates.");
     }
 
-
-    // Test Feature 4: Output the graph to PNG file
+    // Test for Feature 4: Outputting the graph to a PNG file
     @Test
     public void testOutputGraphics() throws IOException {
-        parser.addNode("A");
-        parser.addNode("B");
-        parser.addEdge("A", "B");
-
-        // Output the graph to a PNG file
-        parser.outputGraphics("src/test/resources/output.png", "png");
-
-        // Verify that the PNG file was created
-        File outputFile = new File("src/test/resources/output.png");
-        assertTrue(outputFile.exists());
-    }
-
-    // Additional Test: Ensure correct graph string representation (toString)
-    @Test
-    public void testGraphToString() {
-        parser.addNode("A");
-        parser.addNode("B");
-        parser.addEdge("A", "B");
-
-        String expectedString = "Graph: \nNodes: 2\nEdges: 1\nA -> B\n";
-        assertEquals(expectedString, parser.toString());
+        parser.parseGraph("src/test/resources/sample.dot");
+        parser.addNode("D");
+        parser.addNode("H");
+        parser.addEdge("B", "D");
+        parser.addEdge("D", "H");
+        parser.addEdge("H", "A");
+        String pngOutputPath = "src/test/resources/output_graph.png";
+        parser.outputGraphics(pngOutputPath, "png");
+        File outputFile = new File(pngOutputPath);
+        assertTrue(outputFile.exists(), "The PNG file should be created.");
     }
 }

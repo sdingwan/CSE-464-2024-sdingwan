@@ -1,0 +1,5 @@
+Graph: 
+Nodes: 3
+Edges: 2
+A -> B
+B -> C
