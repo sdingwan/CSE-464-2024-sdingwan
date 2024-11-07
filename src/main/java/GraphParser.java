@@ -13,6 +13,10 @@ import static guru.nidi.graphviz.model.Factory.*;
 public class GraphParser {
     private Graph<Node, DefaultEdge> graph;
 
+    public enum Algorithm {
+        BFS, DFS
+    }
+
     public GraphParser() {
         this.graph = new DefaultDirectedGraph<>(DefaultEdge.class);
     }
@@ -81,7 +85,6 @@ public class GraphParser {
         Graphviz.fromGraph(g).render(Format.PNG).toFile(new File(filePath));
     }
 
-    // New API to remove a single node and its associated edges
     public void removeNode(Node node) {
         if (!graph.containsVertex(node)) {
             throw new IllegalArgumentException("Node " + node + " does not exist in the graph.");
@@ -89,14 +92,12 @@ public class GraphParser {
         graph.removeVertex(node);
     }
 
-    // New API to remove multiple nodes
     public void removeNodes(Node[] nodes) {
         for (Node node : nodes) {
             removeNode(node);
         }
     }
 
-    // New API to remove an edge between two specified nodes
     public void removeEdge(Node src, Node dst) {
         DefaultEdge edge = graph.getEdge(src, dst);
         if (edge == null) {
@@ -105,8 +106,11 @@ public class GraphParser {
         graph.removeEdge(edge);
     }
 
-    // BFS-based GraphSearch API
-    public Path GraphSearchBFS(Node src, Node dst) {
+    public Path GraphSearch(Node src, Node dst, Algorithm algo) {
+        return algo == Algorithm.BFS ? GraphSearchBFS(src, dst) : GraphSearchDFS(src, dst);
+    }
+
+    private Path GraphSearchBFS(Node src, Node dst) {
         if (!graph.containsVertex(src) || !graph.containsVertex(dst)) {
             throw new IllegalArgumentException("One or both of the nodes do not exist in the graph.");
         }
@@ -135,8 +139,7 @@ public class GraphParser {
         return null;
     }
 
-    // DFS-based GraphSearch API
-    public Path GraphSearchDFS(Node src, Node dst) {
+    private Path GraphSearchDFS(Node src, Node dst) {
         if (!graph.containsVertex(src) || !graph.containsVertex(dst)) {
             throw new IllegalArgumentException("One or both of the nodes do not exist in the graph.");
         }
@@ -169,7 +172,6 @@ public class GraphParser {
         return null;
     }
 
-    // Helper method to build the path from src to dst using predecessors map
     private Path buildPath(Node src, Node dst, Map<Node, Node> predecessors) {
         Path path = new Path();
         Node step = dst;

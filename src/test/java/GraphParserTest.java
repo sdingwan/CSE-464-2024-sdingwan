@@ -166,7 +166,7 @@ public class GraphParserTest {
         parser.addEdge(nodeB, nodeC);
         parser.addEdge(nodeC, nodeD);
 
-        Path path = parser.GraphSearchBFS(nodeA, nodeD);
+        Path path = parser.GraphSearch(nodeA, nodeD, GraphParser.Algorithm.BFS);
 
         assertNotNull(path, "A path should exist from 'A' to 'D' using BFS.");
         assertEquals("A -> B -> C -> D", path.toString(), "The path should match the expected sequence.");
@@ -188,7 +188,7 @@ public class GraphParserTest {
         parser.addEdge(nodeA, nodeB);
         parser.addEdge(nodeB, nodeC);
 
-        Path path = parser.GraphSearchBFS(nodeA, nodeD);
+        Path path = parser.GraphSearch(nodeA, nodeD, GraphParser.Algorithm.BFS);
 
         assertNull(path, "No path should exist from 'A' to 'D' using BFS as they are not connected.");
     }
@@ -200,7 +200,7 @@ public class GraphParserTest {
 
         parser.addNode(nodeA);
 
-        Path path = parser.GraphSearchBFS(nodeA, nodeA);
+        Path path = parser.GraphSearch(nodeA, nodeA, GraphParser.Algorithm.BFS);
 
         assertNotNull(path, "A path should exist from 'A' to itself using BFS.");
         assertEquals("A", path.toString(), "The path should contain only 'A'.");
@@ -223,7 +223,7 @@ public class GraphParserTest {
         parser.addEdge(nodeB, nodeC);
         parser.addEdge(nodeC, nodeD);
 
-        Path path = parser.GraphSearchDFS(nodeA, nodeD);
+        Path path = parser.GraphSearch(nodeA, nodeD, GraphParser.Algorithm.DFS);
 
         assertNotNull(path, "A path should exist from 'A' to 'D' using DFS.");
         assertEquals("A -> B -> C -> D", path.toString(), "The path should match the expected sequence.");
@@ -245,7 +245,7 @@ public class GraphParserTest {
         parser.addEdge(nodeA, nodeB);
         parser.addEdge(nodeB, nodeC);
 
-        Path path = parser.GraphSearchDFS(nodeA, nodeD);
+        Path path = parser.GraphSearch(nodeA, nodeD, GraphParser.Algorithm.DFS);
 
         assertNull(path, "No path should exist from 'A' to 'D' using DFS as they are not connected.");
     }
@@ -257,7 +257,7 @@ public class GraphParserTest {
 
         parser.addNode(nodeA);
 
-        Path path = parser.GraphSearchDFS(nodeA, nodeA);
+        Path path = parser.GraphSearch(nodeA, nodeA, GraphParser.Algorithm.DFS);
 
         assertNotNull(path, "A path should exist from 'A' to itself using DFS.");
         assertEquals("A", path.toString(), "The path should contain only 'A'.");
