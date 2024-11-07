@@ -70,7 +70,7 @@ public class GraphParser {
         sb.append("}\n");
         Files.write(Paths.get(filePath), sb.toString().getBytes());
     }
-    // Comment for push
+
     public void outputGraphics(String filePath, String format) throws IOException {
         MutableGraph g = mutGraph("example").setDirected(true);
         for (DefaultEdge edge : graph.edgeSet()) {
@@ -79,6 +79,30 @@ public class GraphParser {
             g.add(mutNode(source).addLink(mutNode(target)));
         }
         Graphviz.fromGraph(g).render(Format.PNG).toFile(new File(filePath));
+    }
+
+    // New API to remove a single node and its associated edges
+    public void removeNode(String label) {
+        if (!graph.containsVertex(label)) {
+            throw new IllegalArgumentException("Node " + label + " does not exist in the graph.");
+        }
+        graph.removeVertex(label);
+    }
+
+    // New API to remove multiple nodes
+    public void removeNodes(String[] labels) {
+        for (String label : labels) {
+            removeNode(label);
+        }
+    }
+
+    // New API to remove an edge between two specified nodes
+    public void removeEdge(String srcLabel, String dstLabel) {
+        DefaultEdge edge = graph.getEdge(srcLabel, dstLabel);
+        if (edge == null) {
+            throw new IllegalArgumentException("Edge from " + srcLabel + " to " + dstLabel + " does not exist in the graph.");
+        }
+        graph.removeEdge(edge);
     }
 
     @Override

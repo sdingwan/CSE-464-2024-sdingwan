@@ -19,7 +19,7 @@ public class GraphParserTest {
     private String normalize(String input) {
         return input.replaceAll("\\s+", "");
     }
-    // Comment for push
+
     // Test for Feature 1: Parsing a DOT graph file
     @Test
     public void testParseGraph() throws IOException {
@@ -89,5 +89,55 @@ public class GraphParserTest {
         parser.outputGraphics(pngOutputPath, "png");
         File outputFile = new File(pngOutputPath);
         assertTrue(outputFile.exists(), "The PNG file should be created.");
+    }
+
+    // New Tests for Removal APIs
+
+    // Test removing a single node
+    @Test
+    public void testRemoveNode() throws IOException {
+        parser.parseGraph("src/test/resources/sample.dot");
+        parser.removeNode("A");
+        assertFalse(parser.getGraph().containsVertex("A"), "Node 'A' should be removed.");
+        assertFalse(parser.getGraph().containsEdge("A", "B"), "Edge from 'A' to 'B' should also be removed.");
+    }
+
+    // Test removing multiple nodes
+    @Test
+    public void testRemoveMultipleNodes() throws IOException {
+        parser.parseGraph("src/test/resources/sample.dot");
+        parser.removeNodes(new String[]{"A", "B"});
+        assertFalse(parser.getGraph().containsVertex("A"), "Node 'A' should be removed.");
+        assertFalse(parser.getGraph().containsVertex("B"), "Node 'B' should be removed.");
+        assertFalse(parser.getGraph().containsEdge("A", "B"), "Edge from 'A' to 'B' should be removed.");
+        assertFalse(parser.getGraph().containsEdge("B", "C"), "Edge from 'B' to 'C' should also be removed.");
+    }
+
+    // Test removing a single edge
+    @Test
+    public void testRemoveEdge() throws IOException {
+        parser.parseGraph("src/test/resources/sample.dot");
+        parser.removeEdge("A", "B");
+        assertFalse(parser.getGraph().containsEdge("A", "B"), "Edge from 'A' to 'B' should be removed.");
+    }
+
+    // Test removing a non-existent node (should throw exception)
+    @Test
+    public void testRemoveNonExistentNode() throws IOException {
+        parser.parseGraph("src/test/resources/sample.dot");
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            parser.removeNode("Z");
+        });
+        assertEquals("Node Z does not exist in the graph.", exception.getMessage());
+    }
+
+    // Test removing a non-existent edge (should throw exception)
+    @Test
+    public void testRemoveNonExistentEdge() throws IOException {
+        parser.parseGraph("src/test/resources/sample.dot");
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            parser.removeEdge("A", "C");
+        });
+        assertEquals("Edge from A to C does not exist in the graph.", exception.getMessage());
     }
 }
