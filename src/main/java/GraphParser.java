@@ -11,13 +11,13 @@ import java.util.*;
 import static guru.nidi.graphviz.model.Factory.*;
 
 public class GraphParser {
-    private Graph<String, DefaultEdge> graph;
+    private Graph<Node, DefaultEdge> graph;
 
     public GraphParser() {
         this.graph = new DefaultDirectedGraph<>(DefaultEdge.class);
     }
 
-    public Graph<String, DefaultEdge> getGraph() {
+    public Graph<Node, DefaultEdge> getGraph() {
         return this.graph;
     }
 
@@ -27,8 +27,8 @@ public class GraphParser {
             line = line.trim();
             if (line.contains("->")) {
                 String[] parts = line.split("->");
-                String source = parts[0].trim();
-                String target = parts[1].replace(";", "").trim();
+                Node source = new Node(parts[0].trim());
+                Node target = new Node(parts[1].replace(";", "").trim());
                 addNode(source);
                 addNode(target);
                 addEdge(source, target);
@@ -36,22 +36,22 @@ public class GraphParser {
         }
     }
 
-    public void addNode(String label) {
-        if (!graph.containsVertex(label)) {
-            graph.addVertex(label);
+    public void addNode(Node node) {
+        if (!graph.containsVertex(node)) {
+            graph.addVertex(node);
         }
     }
 
-    public void addNodes(String[] labels) {
-        for (String label : labels) {
-            addNode(label);
+    public void addNodes(Node[] nodes) {
+        for (Node node : nodes) {
+            addNode(node);
         }
     }
 
-    public void addEdge(String srcLabel, String dstLabel) {
-        if (!graph.containsEdge(srcLabel, dstLabel)) {
-            if (graph.containsVertex(srcLabel) && graph.containsVertex(dstLabel)) {
-                graph.addEdge(srcLabel, dstLabel);
+    public void addEdge(Node src, Node dst) {
+        if (!graph.containsEdge(src, dst)) {
+            if (graph.containsVertex(src) && graph.containsVertex(dst)) {
+                graph.addEdge(src, dst);
             }
         }
     }
@@ -59,12 +59,12 @@ public class GraphParser {
     public void outputDOTGraph(String filePath) throws IOException {
         StringBuilder sb = new StringBuilder();
         sb.append("digraph G {\n");
-        for (String vertex : graph.vertexSet()) {
+        for (Node vertex : graph.vertexSet()) {
             sb.append("\t").append(vertex).append(";\n");
         }
         for (DefaultEdge edge : graph.edgeSet()) {
-            String source = graph.getEdgeSource(edge);
-            String target = graph.getEdgeTarget(edge);
+            Node source = graph.getEdgeSource(edge);
+            Node target = graph.getEdgeTarget(edge);
             sb.append("\t").append(source).append(" -> ").append(target).append(";\n");
         }
         sb.append("}\n");
@@ -74,35 +74,87 @@ public class GraphParser {
     public void outputGraphics(String filePath, String format) throws IOException {
         MutableGraph g = mutGraph("example").setDirected(true);
         for (DefaultEdge edge : graph.edgeSet()) {
-            String source = graph.getEdgeSource(edge);
-            String target = graph.getEdgeTarget(edge);
-            g.add(mutNode(source).addLink(mutNode(target)));
+            Node source = graph.getEdgeSource(edge);
+            Node target = graph.getEdgeTarget(edge);
+            g.add(mutNode(source.toString()).addLink(mutNode(target.toString())));
         }
         Graphviz.fromGraph(g).render(Format.PNG).toFile(new File(filePath));
     }
 
     // New API to remove a single node and its associated edges
-    public void removeNode(String label) {
-        if (!graph.containsVertex(label)) {
-            throw new IllegalArgumentException("Node " + label + " does not exist in the graph.");
+    public void removeNode(Node node) {
+        if (!graph.containsVertex(node)) {
+            throw new IllegalArgumentException("Node " + node + " does not exist in the graph.");
         }
-        graph.removeVertex(label);
+        graph.removeVertex(node);
     }
 
     // New API to remove multiple nodes
-    public void removeNodes(String[] labels) {
-        for (String label : labels) {
-            removeNode(label);
+    public void removeNodes(Node[] nodes) {
+        for (Node node : nodes) {
+            removeNode(node);
         }
     }
 
     // New API to remove an edge between two specified nodes
-    public void removeEdge(String srcLabel, String dstLabel) {
-        DefaultEdge edge = graph.getEdge(srcLabel, dstLabel);
+    public void removeEdge(Node src, Node dst) {
+        DefaultEdge edge = graph.getEdge(src, dst);
         if (edge == null) {
-            throw new IllegalArgumentException("Edge from " + srcLabel + " to " + dstLabel + " does not exist in the graph.");
+            throw new IllegalArgumentException("Edge from " + src + " to " + dst + " does not exist in the graph.");
         }
         graph.removeEdge(edge);
+    }
+
+    // New BFS-based GraphSearch API
+    public Path GraphSearch(Node src, Node dst) {
+        if (!graph.containsVertex(src) || !graph.containsVertex(dst)) {
+            throw new IllegalArgumentException("One or both of the nodes do not exist in the graph.");
+        }
+
+        // BFS traversal to find the path from src to dst
+        Map<Node, Node> predecessors = new HashMap<>();  // Track path predecessors
+        Queue<Node> queue = new LinkedList<>();
+        queue.add(src);
+        predecessors.put(src, null);  // src has no predecessor
+
+        while (!queue.isEmpty()) {
+            Node current = queue.poll();
+
+            // Check if we reached the destination node
+            if (current.equals(dst)) {
+                return buildPath(src, dst, predecessors);
+            }
+
+            // Traverse neighboring nodes
+            for (DefaultEdge edge : graph.outgoingEdgesOf(current)) {
+                Node neighbor = graph.getEdgeTarget(edge);
+
+                // If neighbor hasn't been visited
+                if (!predecessors.containsKey(neighbor)) {
+                    queue.add(neighbor);
+                    predecessors.put(neighbor, current);  // Set the predecessor for neighbor
+                }
+            }
+        }
+
+        // Return null if no path was found
+        return null;
+    }
+
+    // Helper method to build the path from src to dst using predecessors map
+    private Path buildPath(Node src, Node dst, Map<Node, Node> predecessors) {
+        Path path = new Path();
+        Node step = dst;
+
+        // Backtrack from dst to src
+        while (step != null) {
+            path.addNode(step);
+            step = predecessors.get(step);
+        }
+
+        // Reverse the path to start from src
+        Collections.reverse(path.getNodes());
+        return path;
     }
 
     @Override
@@ -112,11 +164,11 @@ public class GraphParser {
         sb.append("Nodes: ").append(graph.vertexSet().size()).append("\n");
         sb.append("Edges: ").append(graph.edgeSet().size()).append("\n");
         for (DefaultEdge edge : graph.edgeSet()) {
-            String source = graph.getEdgeSource(edge);
-            String target = graph.getEdgeTarget(edge);
+            Node source = graph.getEdgeSource(edge);
+            Node target = graph.getEdgeTarget(edge);
             sb.append(source).append(" -> ").append(target).append("\n");
         }
-        for (String vertex : graph.vertexSet()) {
+        for (Node vertex : graph.vertexSet()) {
             if (graph.edgesOf(vertex).isEmpty()) {
                 sb.append(vertex).append("\n");
             }

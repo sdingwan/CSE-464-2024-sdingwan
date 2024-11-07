@@ -33,7 +33,7 @@ public class GraphParserTest {
     @Test
     public void testAddNode() throws IOException {
         parser.parseGraph("src/test/resources/sample.dot");
-        parser.addNode("Z");
+        parser.addNode(new Node("Z"));
         Files.write(Paths.get("src/test/resources/output_add_node.txt"), parser.toString().getBytes());
         String expectedOutput = normalize(Files.readString(Paths.get("src/test/resources/expected_add_node.txt")).trim());
         String actualOutput = normalize(Files.readString(Paths.get("src/test/resources/output_add_node.txt")).trim());
@@ -44,7 +44,7 @@ public class GraphParserTest {
     @Test
     public void testAddMultipleNodes() throws IOException {
         parser.parseGraph("src/test/resources/sample.dot");
-        parser.addNodes(new String[]{"X", "Y"});
+        parser.addNodes(new Node[]{new Node("X"), new Node("Y")});
         Files.write(Paths.get("src/test/resources/output_add_nodes.txt"), parser.toString().getBytes());
         String expectedOutput = normalize(Files.readString(Paths.get("src/test/resources/expected_add_nodes.txt")).trim());
         String actualOutput = normalize(Files.readString(Paths.get("src/test/resources/output_add_nodes.txt")).trim());
@@ -55,9 +55,11 @@ public class GraphParserTest {
     @Test
     public void testAddEdge() throws IOException {
         parser.parseGraph("src/test/resources/sample.dot");
-        parser.addNode("A");
-        parser.addNode("B");
-        parser.addEdge("A", "B");
+        Node nodeA = new Node("A");
+        Node nodeB = new Node("B");
+        parser.addNode(nodeA);
+        parser.addNode(nodeB);
+        parser.addEdge(nodeA, nodeB);
         Files.write(Paths.get("src/test/resources/output_add_edge.txt"), parser.toString().getBytes());
         String expectedOutput = normalize(Files.readString(Paths.get("src/test/resources/expected_add_edge.txt")).trim());
         String actualOutput = normalize(Files.readString(Paths.get("src/test/resources/output_add_edge.txt")).trim());
@@ -68,8 +70,9 @@ public class GraphParserTest {
     @Test
     public void testOutputDOTGraph() throws IOException {
         parser.parseGraph("src/test/resources/sample.dot");
-        parser.addNode("C");
-        parser.addEdge("A", "C");
+        Node nodeC = new Node("C");
+        parser.addNode(nodeC);
+        parser.addEdge(new Node("A"), nodeC);
         parser.outputDOTGraph("src/test/resources/output_graph.dot");
         String expectedOutput = normalize(Files.readString(Paths.get("src/test/resources/expected_output.dot")).replace("\r\n", "\n"));
         String actualOutput = normalize(Files.readString(Paths.get("src/test/resources/output_graph.dot")).replace("\r\n", "\n"));
@@ -80,11 +83,13 @@ public class GraphParserTest {
     @Test
     public void testOutputGraphics() throws IOException {
         parser.parseGraph("src/test/resources/sample.dot");
-        parser.addNode("D");
-        parser.addNode("H");
-        parser.addEdge("B", "D");
-        parser.addEdge("D", "H");
-        parser.addEdge("H", "A");
+        Node nodeD = new Node("D");
+        Node nodeH = new Node("H");
+        parser.addNode(nodeD);
+        parser.addNode(nodeH);
+        parser.addEdge(new Node("B"), nodeD);
+        parser.addEdge(nodeD, nodeH);
+        parser.addEdge(nodeH, new Node("A"));
         String pngOutputPath = "src/test/resources/output_graph.png";
         parser.outputGraphics(pngOutputPath, "png");
         File outputFile = new File(pngOutputPath);
@@ -97,28 +102,31 @@ public class GraphParserTest {
     @Test
     public void testRemoveNode() throws IOException {
         parser.parseGraph("src/test/resources/sample.dot");
-        parser.removeNode("A");
-        assertFalse(parser.getGraph().containsVertex("A"), "Node 'A' should be removed.");
-        assertFalse(parser.getGraph().containsEdge("A", "B"), "Edge from 'A' to 'B' should also be removed.");
+        Node nodeA = new Node("A");
+        parser.removeNode(nodeA);
+        assertFalse(parser.getGraph().containsVertex(nodeA), "Node 'A' should be removed.");
+        assertFalse(parser.getGraph().containsEdge(nodeA, new Node("B")), "Edge from 'A' to 'B' should also be removed.");
     }
 
     // Test removing multiple nodes
     @Test
     public void testRemoveMultipleNodes() throws IOException {
         parser.parseGraph("src/test/resources/sample.dot");
-        parser.removeNodes(new String[]{"A", "B"});
-        assertFalse(parser.getGraph().containsVertex("A"), "Node 'A' should be removed.");
-        assertFalse(parser.getGraph().containsVertex("B"), "Node 'B' should be removed.");
-        assertFalse(parser.getGraph().containsEdge("A", "B"), "Edge from 'A' to 'B' should be removed.");
-        assertFalse(parser.getGraph().containsEdge("B", "C"), "Edge from 'B' to 'C' should also be removed.");
+        Node nodeA = new Node("A");
+        Node nodeB = new Node("B");
+        parser.removeNodes(new Node[]{nodeA, nodeB});
+        assertFalse(parser.getGraph().containsVertex(nodeA), "Node 'A' should be removed.");
+        assertFalse(parser.getGraph().containsVertex(nodeB), "Node 'B' should be removed.");
+        assertFalse(parser.getGraph().containsEdge(nodeA, nodeB), "Edge from 'A' to 'B' should be removed.");
+        assertFalse(parser.getGraph().containsEdge(nodeB, new Node("C")), "Edge from 'B' to 'C' should also be removed.");
     }
 
     // Test removing a single edge
     @Test
     public void testRemoveEdge() throws IOException {
         parser.parseGraph("src/test/resources/sample.dot");
-        parser.removeEdge("A", "B");
-        assertFalse(parser.getGraph().containsEdge("A", "B"), "Edge from 'A' to 'B' should be removed.");
+        parser.removeEdge(new Node("A"), new Node("B"));
+        assertFalse(parser.getGraph().containsEdge(new Node("A"), new Node("B")), "Edge from 'A' to 'B' should be removed.");
     }
 
     // Test removing a non-existent node (should throw exception)
@@ -126,7 +134,7 @@ public class GraphParserTest {
     public void testRemoveNonExistentNode() throws IOException {
         parser.parseGraph("src/test/resources/sample.dot");
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            parser.removeNode("Z");
+            parser.removeNode(new Node("Z"));
         });
         assertEquals("Node Z does not exist in the graph.", exception.getMessage());
     }
@@ -136,8 +144,96 @@ public class GraphParserTest {
     public void testRemoveNonExistentEdge() throws IOException {
         parser.parseGraph("src/test/resources/sample.dot");
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            parser.removeEdge("A", "C");
+            parser.removeEdge(new Node("A"), new Node("C"));
         });
         assertEquals("Edge from A to C does not exist in the graph.", exception.getMessage());
+    }
+// New Tests for BFS-based GraphSearch API
+
+    // Test finding a path between two connected nodes
+    @Test
+    public void testGraphSearchPathExists() throws IOException {
+        Node nodeA = new Node("A");
+        Node nodeB = new Node("B");
+        Node nodeC = new Node("C");
+        Node nodeD = new Node("D");
+
+        parser.addNode(nodeA);
+        parser.addNode(nodeB);
+        parser.addNode(nodeC);
+        parser.addNode(nodeD);
+
+        parser.addEdge(nodeA, nodeB);
+        parser.addEdge(nodeB, nodeC);
+        parser.addEdge(nodeC, nodeD);
+
+        Path path = parser.GraphSearch(nodeA, nodeD);
+
+        assertNotNull(path, "A path should exist from 'A' to 'D'.");
+        assertEquals("A -> B -> C -> D", path.toString(), "The path should match the expected sequence.");
+    }
+
+    // Test returning null if there is no path between two nodes
+    @Test
+    public void testGraphSearchNoPath() throws IOException {
+        Node nodeA = new Node("A");
+        Node nodeB = new Node("B");
+        Node nodeC = new Node("C");
+        Node nodeD = new Node("D");
+
+        parser.addNode(nodeA);
+        parser.addNode(nodeB);
+        parser.addNode(nodeC);
+        parser.addNode(nodeD);
+
+        parser.addEdge(nodeA, nodeB);
+        parser.addEdge(nodeB, nodeC);
+
+        Path path = parser.GraphSearch(nodeA, nodeD);
+
+        assertNull(path, "No path should exist from 'A' to 'D' as they are not connected.");
+    }
+
+    // Test searching from a node to itself (should return a path with a single node)
+    @Test
+    public void testGraphSearchSameNode() throws IOException {
+        Node nodeA = new Node("A");
+
+        parser.addNode(nodeA);
+
+        Path path = parser.GraphSearch(nodeA, nodeA);
+
+        assertNotNull(path, "A path should exist from 'A' to itself.");
+        assertEquals("A", path.toString(), "The path should contain only 'A'.");
+    }
+
+    // Test searching between nodes when the start node does not exist
+    @Test
+    public void testGraphSearchStartNodeDoesNotExist() {
+        Node nodeA = new Node("A");
+        Node nodeB = new Node("B");
+
+        parser.addNode(nodeB);
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            parser.GraphSearch(nodeA, nodeB);
+        });
+
+        assertEquals("One or both of the nodes do not exist in the graph.", exception.getMessage());
+    }
+
+    // Test searching between nodes when the end node does not exist
+    @Test
+    public void testGraphSearchEndNodeDoesNotExist() {
+        Node nodeA = new Node("A");
+        Node nodeB = new Node("B");
+
+        parser.addNode(nodeA);
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            parser.GraphSearch(nodeA, nodeB);
+        });
+
+        assertEquals("One or both of the nodes do not exist in the graph.", exception.getMessage());
     }
 }
