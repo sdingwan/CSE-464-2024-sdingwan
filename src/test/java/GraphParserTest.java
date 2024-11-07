@@ -148,11 +148,10 @@ public class GraphParserTest {
         });
         assertEquals("Edge from A to C does not exist in the graph.", exception.getMessage());
     }
-// New Tests for BFS-based GraphSearch API
 
-    // Test finding a path between two connected nodes
+    // Test finding a path between two connected nodes using BFS
     @Test
-    public void testGraphSearchPathExists() throws IOException {
+    public void testGraphSearchBFSPathExists() throws IOException {
         Node nodeA = new Node("A");
         Node nodeB = new Node("B");
         Node nodeC = new Node("C");
@@ -167,15 +166,15 @@ public class GraphParserTest {
         parser.addEdge(nodeB, nodeC);
         parser.addEdge(nodeC, nodeD);
 
-        Path path = parser.GraphSearch(nodeA, nodeD);
+        Path path = parser.GraphSearchBFS(nodeA, nodeD);
 
-        assertNotNull(path, "A path should exist from 'A' to 'D'.");
+        assertNotNull(path, "A path should exist from 'A' to 'D' using BFS.");
         assertEquals("A -> B -> C -> D", path.toString(), "The path should match the expected sequence.");
     }
 
-    // Test returning null if there is no path between two nodes
+    // Test returning null if there is no path between two nodes using BFS
     @Test
-    public void testGraphSearchNoPath() throws IOException {
+    public void testGraphSearchBFSNoPath() throws IOException {
         Node nodeA = new Node("A");
         Node nodeB = new Node("B");
         Node nodeC = new Node("C");
@@ -189,51 +188,78 @@ public class GraphParserTest {
         parser.addEdge(nodeA, nodeB);
         parser.addEdge(nodeB, nodeC);
 
-        Path path = parser.GraphSearch(nodeA, nodeD);
+        Path path = parser.GraphSearchBFS(nodeA, nodeD);
 
-        assertNull(path, "No path should exist from 'A' to 'D' as they are not connected.");
+        assertNull(path, "No path should exist from 'A' to 'D' using BFS as they are not connected.");
     }
 
-    // Test searching from a node to itself (should return a path with a single node)
+    // Test searching from a node to itself using BFS (should return a path with a single node)
     @Test
-    public void testGraphSearchSameNode() throws IOException {
+    public void testGraphSearchBFSSameNode() throws IOException {
         Node nodeA = new Node("A");
 
         parser.addNode(nodeA);
 
-        Path path = parser.GraphSearch(nodeA, nodeA);
+        Path path = parser.GraphSearchBFS(nodeA, nodeA);
 
-        assertNotNull(path, "A path should exist from 'A' to itself.");
+        assertNotNull(path, "A path should exist from 'A' to itself using BFS.");
         assertEquals("A", path.toString(), "The path should contain only 'A'.");
     }
 
-    // Test searching between nodes when the start node does not exist
+    // Test finding a path between two connected nodes using DFS
     @Test
-    public void testGraphSearchStartNodeDoesNotExist() {
+    public void testGraphSearchDFSPathExists() throws IOException {
         Node nodeA = new Node("A");
         Node nodeB = new Node("B");
+        Node nodeC = new Node("C");
+        Node nodeD = new Node("D");
 
+        parser.addNode(nodeA);
         parser.addNode(nodeB);
+        parser.addNode(nodeC);
+        parser.addNode(nodeD);
 
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            parser.GraphSearch(nodeA, nodeB);
-        });
+        parser.addEdge(nodeA, nodeB);
+        parser.addEdge(nodeB, nodeC);
+        parser.addEdge(nodeC, nodeD);
 
-        assertEquals("One or both of the nodes do not exist in the graph.", exception.getMessage());
+        Path path = parser.GraphSearchDFS(nodeA, nodeD);
+
+        assertNotNull(path, "A path should exist from 'A' to 'D' using DFS.");
+        assertEquals("A -> B -> C -> D", path.toString(), "The path should match the expected sequence.");
     }
 
-    // Test searching between nodes when the end node does not exist
+    // Test returning null if there is no path between two nodes using DFS
     @Test
-    public void testGraphSearchEndNodeDoesNotExist() {
+    public void testGraphSearchDFSNoPath() throws IOException {
         Node nodeA = new Node("A");
         Node nodeB = new Node("B");
+        Node nodeC = new Node("C");
+        Node nodeD = new Node("D");
+
+        parser.addNode(nodeA);
+        parser.addNode(nodeB);
+        parser.addNode(nodeC);
+        parser.addNode(nodeD);
+
+        parser.addEdge(nodeA, nodeB);
+        parser.addEdge(nodeB, nodeC);
+
+        Path path = parser.GraphSearchDFS(nodeA, nodeD);
+
+        assertNull(path, "No path should exist from 'A' to 'D' using DFS as they are not connected.");
+    }
+
+    // Test searching from a node to itself using DFS (should return a path with a single node)
+    @Test
+    public void testGraphSearchDFSSameNode() throws IOException {
+        Node nodeA = new Node("A");
 
         parser.addNode(nodeA);
 
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            parser.GraphSearch(nodeA, nodeB);
-        });
+        Path path = parser.GraphSearchDFS(nodeA, nodeA);
 
-        assertEquals("One or both of the nodes do not exist in the graph.", exception.getMessage());
+        assertNotNull(path, "A path should exist from 'A' to itself using DFS.");
+        assertEquals("A", path.toString(), "The path should contain only 'A'.");
     }
 }

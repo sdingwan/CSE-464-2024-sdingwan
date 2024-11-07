@@ -105,39 +105,67 @@ public class GraphParser {
         graph.removeEdge(edge);
     }
 
-    // New BFS-based GraphSearch API
-    public Path GraphSearch(Node src, Node dst) {
+    // BFS-based GraphSearch API
+    public Path GraphSearchBFS(Node src, Node dst) {
         if (!graph.containsVertex(src) || !graph.containsVertex(dst)) {
             throw new IllegalArgumentException("One or both of the nodes do not exist in the graph.");
         }
 
-        // BFS traversal to find the path from src to dst
-        Map<Node, Node> predecessors = new HashMap<>();  // Track path predecessors
+        Map<Node, Node> predecessors = new HashMap<>();
         Queue<Node> queue = new LinkedList<>();
         queue.add(src);
-        predecessors.put(src, null);  // src has no predecessor
+        predecessors.put(src, null);
 
         while (!queue.isEmpty()) {
             Node current = queue.poll();
 
-            // Check if we reached the destination node
             if (current.equals(dst)) {
                 return buildPath(src, dst, predecessors);
             }
 
-            // Traverse neighboring nodes
             for (DefaultEdge edge : graph.outgoingEdgesOf(current)) {
                 Node neighbor = graph.getEdgeTarget(edge);
-
-                // If neighbor hasn't been visited
                 if (!predecessors.containsKey(neighbor)) {
                     queue.add(neighbor);
-                    predecessors.put(neighbor, current);  // Set the predecessor for neighbor
+                    predecessors.put(neighbor, current);
                 }
             }
         }
 
-        // Return null if no path was found
+        return null;
+    }
+
+    // DFS-based GraphSearch API
+    public Path GraphSearchDFS(Node src, Node dst) {
+        if (!graph.containsVertex(src) || !graph.containsVertex(dst)) {
+            throw new IllegalArgumentException("One or both of the nodes do not exist in the graph.");
+        }
+
+        Stack<Node> stack = new Stack<>();
+        Map<Node, Node> predecessors = new HashMap<>();
+        Set<Node> visited = new HashSet<>();
+
+        stack.push(src);
+        predecessors.put(src, null);
+        visited.add(src);
+
+        while (!stack.isEmpty()) {
+            Node current = stack.pop();
+
+            if (current.equals(dst)) {
+                return buildPath(src, dst, predecessors);
+            }
+
+            for (DefaultEdge edge : graph.outgoingEdgesOf(current)) {
+                Node neighbor = graph.getEdgeTarget(edge);
+                if (!visited.contains(neighbor)) {
+                    stack.push(neighbor);
+                    visited.add(neighbor);
+                    predecessors.put(neighbor, current);
+                }
+            }
+        }
+
         return null;
     }
 
@@ -146,13 +174,11 @@ public class GraphParser {
         Path path = new Path();
         Node step = dst;
 
-        // Backtrack from dst to src
         while (step != null) {
             path.addNode(step);
             step = predecessors.get(step);
         }
 
-        // Reverse the path to start from src
         Collections.reverse(path.getNodes());
         return path;
     }
