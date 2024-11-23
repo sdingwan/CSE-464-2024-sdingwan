@@ -161,4 +161,24 @@ public class GraphParserTest {
         assertNotNull(dfsPath, "A path should exist from 'A' to 'D' using DFS.");
         assertEquals("A -> B -> C -> D", dfsPath.toString(), "The DFS path should match the expected output.");
     }
+    @Test
+    public void testGraphSearchRandomWalk() throws IOException {
+        // Parse the graph from the DOT file
+        parser.parseGraph("src/test/resources/sample_random_walk.dot");
+
+        Node nodeA = new Node("A");
+        Node nodeC = new Node("C");
+
+        // Run the random walk multiple times to test randomness
+        for (int i = 0; i < 5; i++) {
+            System.out.println("Random testing:");
+            Path randomWalkPath = parser.graphSearch(nodeA, nodeC, GraphParser.Algorithm.RANDOM_WALK);
+            if (randomWalkPath != null) {
+                System.out.println("Path found: " + randomWalkPath);
+            } else {
+                System.out.println("Random walk failed to find a path.");
+            }
+        }
+    }
+
 }

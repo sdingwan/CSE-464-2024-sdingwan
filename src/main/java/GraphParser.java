@@ -14,7 +14,7 @@ public class GraphParser {
     private Graph<Node, DefaultEdge> graph;
 
     public enum Algorithm {
-        BFS, DFS
+        BFS, DFS, RANDOM_WALK
     }
 
     public GraphParser() {
@@ -95,22 +95,21 @@ public class GraphParser {
         Graphviz.fromGraph(g).render(Format.PNG).toFile(new File(filePath));
     }
 
-    // Apply Strategy Pattern for Graph Search
     public Path graphSearch(Node sourceNode, Node destinationNode, Algorithm algo) {
         GraphTraversalStrategy strategy;
 
         // Select the strategy dynamically based on the algorithm parameter
-        if (algo == Algorithm.BFS) {
-            strategy = new BFS();
-        } else if (algo == Algorithm.DFS) {
-            strategy = new DFS();
-        } else {
-            throw new IllegalArgumentException("Unsupported algorithm: " + algo);
+        switch (algo) {
+            case BFS -> strategy = new BFS();
+            case DFS -> strategy = new DFS();
+            case RANDOM_WALK -> strategy = new RandomWalk();
+            default -> throw new IllegalArgumentException("Unsupported algorithm: " + algo);
         }
 
         // Use the selected strategy to perform the traversal
         return strategy.traverse(graph, sourceNode, destinationNode);
     }
+
 
     public void removeNode(Node node) {
         if (!graph.containsVertex(node)) {
