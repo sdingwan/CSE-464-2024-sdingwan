@@ -95,15 +95,21 @@ public class GraphParser {
         Graphviz.fromGraph(g).render(Format.PNG).toFile(new File(filePath));
     }
 
-    // Use Template Pattern for Graph Search
+    // Apply Strategy Pattern for Graph Search
     public Path graphSearch(Node sourceNode, Node destinationNode, Algorithm algo) {
-        GraphTraversalTemplate traversal;
+        GraphTraversalStrategy strategy;
+
+        // Select the strategy dynamically based on the algorithm parameter
         if (algo == Algorithm.BFS) {
-            traversal = new BFS(graph);
+            strategy = new BFS();
+        } else if (algo == Algorithm.DFS) {
+            strategy = new DFS();
         } else {
-            traversal = new DFS(graph);
+            throw new IllegalArgumentException("Unsupported algorithm: " + algo);
         }
-        return traversal.traverse(sourceNode, destinationNode);
+
+        // Use the selected strategy to perform the traversal
+        return strategy.traverse(graph, sourceNode, destinationNode);
     }
 
     public void removeNode(Node node) {

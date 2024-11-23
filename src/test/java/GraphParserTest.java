@@ -137,4 +137,28 @@ public class GraphParserTest {
         assertNotNull(path, "A path should exist from 'A' to 'D' using DFS.");
         assertEquals("A -> B -> C -> D", path.toString(), "The path should match the expected output.");
     }
+
+    // Test for dynamic strategy selection (Strategy Pattern)
+    @Test
+    public void testGraphSearchStrategyPattern() {
+        Node nodeA = new Node("A");
+        Node nodeB = new Node("B");
+        Node nodeC = new Node("C");
+        Node nodeD = new Node("D");
+
+        parser.addNodes(new Node[]{nodeA, nodeB, nodeC, nodeD});
+        parser.addEdge(nodeA, nodeB);
+        parser.addEdge(nodeB, nodeC);
+        parser.addEdge(nodeC, nodeD);
+
+        // Use BFS
+        Path bfsPath = parser.graphSearch(nodeA, nodeD, GraphParser.Algorithm.BFS);
+        assertNotNull(bfsPath, "A path should exist from 'A' to 'D' using BFS.");
+        assertEquals("A -> B -> C -> D", bfsPath.toString(), "The BFS path should match the expected output.");
+
+        // Use DFS
+        Path dfsPath = parser.graphSearch(nodeA, nodeD, GraphParser.Algorithm.DFS);
+        assertNotNull(dfsPath, "A path should exist from 'A' to 'D' using DFS.");
+        assertEquals("A -> B -> C -> D", dfsPath.toString(), "The DFS path should match the expected output.");
+    }
 }
