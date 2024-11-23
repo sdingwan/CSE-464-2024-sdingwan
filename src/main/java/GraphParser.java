@@ -40,8 +40,7 @@ public class GraphParser {
         }
     }
 
-    // Refactor 1: Encapsulate Node Addition Logic
-    // Why: Avoid repetitive null checks and simplify node addition logic.
+    // Encapsulate Node Addition Logic
     private void ensureNodeExists(Node node) {
         if (!graph.containsVertex(node)) {
             graph.addVertex(node);
@@ -58,8 +57,7 @@ public class GraphParser {
         }
     }
 
-    // Refactor 2: Encapsulate Edge Addition Logic
-    // Why: Simplify edge addition and handle checks for vertex existence in one place.
+    // Encapsulate Edge Addition Logic
     private void ensureEdgeExists(Node source, Node target) {
         if (!graph.containsEdge(source, target)) {
             if (graph.containsVertex(source) && graph.containsVertex(target)) {
@@ -97,87 +95,15 @@ public class GraphParser {
         Graphviz.fromGraph(g).render(Format.PNG).toFile(new File(filePath));
     }
 
-    // Refactor 3: Improve Variable Names for Clarity
-    // Why: Enhance code readability by using descriptive variable names.
+    // Use Template Pattern for Graph Search
     public Path graphSearch(Node sourceNode, Node destinationNode, Algorithm algo) {
-        return algo == Algorithm.BFS ? graphSearchBFS(sourceNode, destinationNode) : graphSearchDFS(sourceNode, destinationNode);
-    }
-
-    private Path graphSearchBFS(Node sourceNode, Node destinationNode) {
-        if (!graph.containsVertex(sourceNode) || !graph.containsVertex(destinationNode)) {
-            throw new IllegalArgumentException("One or both of the nodes do not exist in the graph.");
+        GraphTraversalTemplate traversal;
+        if (algo == Algorithm.BFS) {
+            traversal = new BFS(graph);
+        } else {
+            traversal = new DFS(graph);
         }
-
-        Map<Node, Node> predecessors = new HashMap<>();
-        Queue<Node> queue = new LinkedList<>();
-        queue.add(sourceNode);
-        predecessors.put(sourceNode, null);
-
-        while (!queue.isEmpty()) {
-            Node current = queue.poll();
-
-            if (current.equals(destinationNode)) {
-                return buildPath(sourceNode, destinationNode, predecessors);
-            }
-
-            for (DefaultEdge edge : graph.outgoingEdgesOf(current)) {
-                Node neighbor = graph.getEdgeTarget(edge);
-                if (!predecessors.containsKey(neighbor)) {
-                    queue.add(neighbor);
-                    predecessors.put(neighbor, current);
-                }
-            }
-        }
-
-        return null;
-    }
-
-    private Path graphSearchDFS(Node sourceNode, Node destinationNode) {
-        if (!graph.containsVertex(sourceNode) || !graph.containsVertex(destinationNode)) {
-            throw new IllegalArgumentException("One or both of the nodes do not exist in the graph.");
-        }
-
-        Stack<Node> stack = new Stack<>();
-        Map<Node, Node> predecessors = new HashMap<>();
-        Set<Node> visited = new HashSet<>();
-
-        stack.push(sourceNode);
-        predecessors.put(sourceNode, null);
-        visited.add(sourceNode);
-
-        while (!stack.isEmpty()) {
-            Node current = stack.pop();
-
-            if (current.equals(destinationNode)) {
-                return buildPath(sourceNode, destinationNode, predecessors);
-            }
-
-            for (DefaultEdge edge : graph.outgoingEdgesOf(current)) {
-                Node neighbor = graph.getEdgeTarget(edge);
-                if (!visited.contains(neighbor)) {
-                    stack.push(neighbor);
-                    visited.add(neighbor);
-                    predecessors.put(neighbor, current);
-                }
-            }
-        }
-
-        return null;
-    }
-
-    // Refactor 4: Extract Method (Build Path)
-    // Why: Reduce duplication in BFS and DFS by creating a reusable method.
-    private Path buildPath(Node sourceNode, Node destinationNode, Map<Node, Node> predecessors) {
-        Path path = new Path();
-        Node step = destinationNode;
-
-        while (step != null) {
-            path.addNode(step);
-            step = predecessors.get(step);
-        }
-
-        Collections.reverse(path.getNodes());
-        return path;
+        return traversal.traverse(sourceNode, destinationNode);
     }
 
     public void removeNode(Node node) {
@@ -201,8 +127,6 @@ public class GraphParser {
         graph.removeEdge(edge);
     }
 
-    // Refactor 5: Simplify toString Method
-    // Why: Improve maintainability by using Java streams for iteration.
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("Graph: \n");
