@@ -40,10 +40,16 @@ public class GraphParser {
         }
     }
 
-    public void addNode(Node node) {
+    // Refactor 1: Encapsulate Node Addition Logic
+    // Why: Avoid repetitive null checks and simplify node addition logic.
+    private void ensureNodeExists(Node node) {
         if (!graph.containsVertex(node)) {
             graph.addVertex(node);
         }
+    }
+
+    public void addNode(Node node) {
+        ensureNodeExists(node);
     }
 
     public void addNodes(Node[] nodes) {
@@ -52,12 +58,18 @@ public class GraphParser {
         }
     }
 
-    public void addEdge(Node src, Node dst) {
-        if (!graph.containsEdge(src, dst)) {
-            if (graph.containsVertex(src) && graph.containsVertex(dst)) {
-                graph.addEdge(src, dst);
+    // Refactor 2: Encapsulate Edge Addition Logic
+    // Why: Simplify edge addition and handle checks for vertex existence in one place.
+    private void ensureEdgeExists(Node source, Node target) {
+        if (!graph.containsEdge(source, target)) {
+            if (graph.containsVertex(source) && graph.containsVertex(target)) {
+                graph.addEdge(source, target);
             }
         }
+    }
+
+    public void addEdge(Node source, Node target) {
+        ensureEdgeExists(source, target);
     }
 
     public void outputDOTGraph(String filePath) throws IOException {
@@ -85,46 +97,27 @@ public class GraphParser {
         Graphviz.fromGraph(g).render(Format.PNG).toFile(new File(filePath));
     }
 
-    public void removeNode(Node node) {
-        if (!graph.containsVertex(node)) {
-            throw new IllegalArgumentException("Node " + node + " does not exist in the graph.");
-        }
-        graph.removeVertex(node);
+    // Refactor 3: Improve Variable Names for Clarity
+    // Why: Enhance code readability by using descriptive variable names.
+    public Path graphSearch(Node sourceNode, Node destinationNode, Algorithm algo) {
+        return algo == Algorithm.BFS ? graphSearchBFS(sourceNode, destinationNode) : graphSearchDFS(sourceNode, destinationNode);
     }
 
-    public void removeNodes(Node[] nodes) {
-        for (Node node : nodes) {
-            removeNode(node);
-        }
-    }
-
-    public void removeEdge(Node src, Node dst) {
-        DefaultEdge edge = graph.getEdge(src, dst);
-        if (edge == null) {
-            throw new IllegalArgumentException("Edge from " + src + " to " + dst + " does not exist in the graph.");
-        }
-        graph.removeEdge(edge);
-    }
-
-    public Path GraphSearch(Node src, Node dst, Algorithm algo) {
-        return algo == Algorithm.BFS ? GraphSearchBFS(src, dst) : GraphSearchDFS(src, dst);
-    }
-
-    private Path GraphSearchBFS(Node src, Node dst) {
-        if (!graph.containsVertex(src) || !graph.containsVertex(dst)) {
+    private Path graphSearchBFS(Node sourceNode, Node destinationNode) {
+        if (!graph.containsVertex(sourceNode) || !graph.containsVertex(destinationNode)) {
             throw new IllegalArgumentException("One or both of the nodes do not exist in the graph.");
         }
 
         Map<Node, Node> predecessors = new HashMap<>();
         Queue<Node> queue = new LinkedList<>();
-        queue.add(src);
-        predecessors.put(src, null);
+        queue.add(sourceNode);
+        predecessors.put(sourceNode, null);
 
         while (!queue.isEmpty()) {
             Node current = queue.poll();
 
-            if (current.equals(dst)) {
-                return buildPath(src, dst, predecessors);
+            if (current.equals(destinationNode)) {
+                return buildPath(sourceNode, destinationNode, predecessors);
             }
 
             for (DefaultEdge edge : graph.outgoingEdgesOf(current)) {
@@ -139,8 +132,8 @@ public class GraphParser {
         return null;
     }
 
-    private Path GraphSearchDFS(Node src, Node dst) {
-        if (!graph.containsVertex(src) || !graph.containsVertex(dst)) {
+    private Path graphSearchDFS(Node sourceNode, Node destinationNode) {
+        if (!graph.containsVertex(sourceNode) || !graph.containsVertex(destinationNode)) {
             throw new IllegalArgumentException("One or both of the nodes do not exist in the graph.");
         }
 
@@ -148,15 +141,15 @@ public class GraphParser {
         Map<Node, Node> predecessors = new HashMap<>();
         Set<Node> visited = new HashSet<>();
 
-        stack.push(src);
-        predecessors.put(src, null);
-        visited.add(src);
+        stack.push(sourceNode);
+        predecessors.put(sourceNode, null);
+        visited.add(sourceNode);
 
         while (!stack.isEmpty()) {
             Node current = stack.pop();
 
-            if (current.equals(dst)) {
-                return buildPath(src, dst, predecessors);
+            if (current.equals(destinationNode)) {
+                return buildPath(sourceNode, destinationNode, predecessors);
             }
 
             for (DefaultEdge edge : graph.outgoingEdgesOf(current)) {
@@ -172,9 +165,11 @@ public class GraphParser {
         return null;
     }
 
-    private Path buildPath(Node src, Node dst, Map<Node, Node> predecessors) {
+    // Refactor 4: Extract Method (Build Path)
+    // Why: Reduce duplication in BFS and DFS by creating a reusable method.
+    private Path buildPath(Node sourceNode, Node destinationNode, Map<Node, Node> predecessors) {
         Path path = new Path();
-        Node step = dst;
+        Node step = destinationNode;
 
         while (step != null) {
             path.addNode(step);
@@ -185,22 +180,45 @@ public class GraphParser {
         return path;
     }
 
+    public void removeNode(Node node) {
+        if (!graph.containsVertex(node)) {
+            throw new IllegalArgumentException("Node " + node + " does not exist in the graph.");
+        }
+        graph.removeVertex(node);
+    }
+
+    public void removeNodes(Node[] nodes) {
+        for (Node node : nodes) {
+            removeNode(node);
+        }
+    }
+
+    public void removeEdge(Node source, Node target) {
+        DefaultEdge edge = graph.getEdge(source, target);
+        if (edge == null) {
+            throw new IllegalArgumentException("Edge from " + source + " to " + target + " does not exist in the graph.");
+        }
+        graph.removeEdge(edge);
+    }
+
+    // Refactor 5: Simplify toString Method
+    // Why: Improve maintainability by using Java streams for iteration.
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Graph: \n");
+        StringBuilder sb = new StringBuilder("Graph: \n");
         sb.append("Nodes: ").append(graph.vertexSet().size()).append("\n");
         sb.append("Edges: ").append(graph.edgeSet().size()).append("\n");
-        for (DefaultEdge edge : graph.edgeSet()) {
+
+        graph.edgeSet().forEach(edge -> {
             Node source = graph.getEdgeSource(edge);
             Node target = graph.getEdgeTarget(edge);
             sb.append(source).append(" -> ").append(target).append("\n");
-        }
-        for (Node vertex : graph.vertexSet()) {
-            if (graph.edgesOf(vertex).isEmpty()) {
-                sb.append(vertex).append("\n");
-            }
-        }
+        });
+
+        graph.vertexSet().stream()
+                .filter(vertex -> graph.edgesOf(vertex).isEmpty())
+                .forEach(vertex -> sb.append(vertex).append("\n"));
+
         return sb.toString();
     }
 }
