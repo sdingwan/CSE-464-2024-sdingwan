@@ -14,7 +14,7 @@ public class GraphParser {
     private Graph<Node, DefaultEdge> graph;
 
     public enum Algorithm {
-        BFS, DFS
+        BFS, DFS, RANDOM_WALK
     }
 
     public GraphParser() {
@@ -40,10 +40,15 @@ public class GraphParser {
         }
     }
 
-    public void addNode(Node node) {
+    // Encapsulate Node Addition Logic
+    private void ensureNodeExists(Node node) {
         if (!graph.containsVertex(node)) {
             graph.addVertex(node);
         }
+    }
+
+    public void addNode(Node node) {
+        ensureNodeExists(node);
     }
 
     public void addNodes(Node[] nodes) {
@@ -52,12 +57,17 @@ public class GraphParser {
         }
     }
 
-    public void addEdge(Node src, Node dst) {
-        if (!graph.containsEdge(src, dst)) {
-            if (graph.containsVertex(src) && graph.containsVertex(dst)) {
-                graph.addEdge(src, dst);
+    // Encapsulate Edge Addition Logic
+    private void ensureEdgeExists(Node source, Node target) {
+        if (!graph.containsEdge(source, target)) {
+            if (graph.containsVertex(source) && graph.containsVertex(target)) {
+                graph.addEdge(source, target);
             }
         }
+    }
+
+    public void addEdge(Node source, Node target) {
+        ensureEdgeExists(source, target);
     }
 
     public void outputDOTGraph(String filePath) throws IOException {
@@ -85,6 +95,21 @@ public class GraphParser {
         Graphviz.fromGraph(g).render(Format.PNG).toFile(new File(filePath));
     }
 
+    public Path graphSearch(Node sourceNode, Node destinationNode, Algorithm algo) {
+        GraphTraversalTemplate traversalTemplate;
+
+        // Select the appropriate traversal strategy dynamically
+        switch (algo) {
+            case BFS -> traversalTemplate = new BFS(graph);
+            case DFS -> traversalTemplate = new DFS(graph);
+            case RANDOM_WALK -> traversalTemplate = new RandomWalk(graph);
+            default -> throw new IllegalArgumentException("Unsupported algorithm: " + algo);
+        }
+
+        // Use the selected strategy to perform the traversal
+        return traversalTemplate.traverse(sourceNode, destinationNode);
+    }
+
     public void removeNode(Node node) {
         if (!graph.containsVertex(node)) {
             throw new IllegalArgumentException("Node " + node + " does not exist in the graph.");
@@ -98,109 +123,30 @@ public class GraphParser {
         }
     }
 
-    public void removeEdge(Node src, Node dst) {
-        DefaultEdge edge = graph.getEdge(src, dst);
+    public void removeEdge(Node source, Node target) {
+        DefaultEdge edge = graph.getEdge(source, target);
         if (edge == null) {
-            throw new IllegalArgumentException("Edge from " + src + " to " + dst + " does not exist in the graph.");
+            throw new IllegalArgumentException("Edge from " + source + " to " + target + " does not exist in the graph.");
         }
         graph.removeEdge(edge);
     }
 
-    public Path GraphSearch(Node src, Node dst, Algorithm algo) {
-        return algo == Algorithm.BFS ? GraphSearchBFS(src, dst) : GraphSearchDFS(src, dst);
-    }
-
-    private Path GraphSearchBFS(Node src, Node dst) {
-        if (!graph.containsVertex(src) || !graph.containsVertex(dst)) {
-            throw new IllegalArgumentException("One or both of the nodes do not exist in the graph.");
-        }
-
-        Map<Node, Node> predecessors = new HashMap<>();
-        Queue<Node> queue = new LinkedList<>();
-        queue.add(src);
-        predecessors.put(src, null);
-
-        while (!queue.isEmpty()) {
-            Node current = queue.poll();
-
-            if (current.equals(dst)) {
-                return buildPath(src, dst, predecessors);
-            }
-
-            for (DefaultEdge edge : graph.outgoingEdgesOf(current)) {
-                Node neighbor = graph.getEdgeTarget(edge);
-                if (!predecessors.containsKey(neighbor)) {
-                    queue.add(neighbor);
-                    predecessors.put(neighbor, current);
-                }
-            }
-        }
-
-        return null;
-    }
-
-    private Path GraphSearchDFS(Node src, Node dst) {
-        if (!graph.containsVertex(src) || !graph.containsVertex(dst)) {
-            throw new IllegalArgumentException("One or both of the nodes do not exist in the graph.");
-        }
-
-        Stack<Node> stack = new Stack<>();
-        Map<Node, Node> predecessors = new HashMap<>();
-        Set<Node> visited = new HashSet<>();
-
-        stack.push(src);
-        predecessors.put(src, null);
-        visited.add(src);
-
-        while (!stack.isEmpty()) {
-            Node current = stack.pop();
-
-            if (current.equals(dst)) {
-                return buildPath(src, dst, predecessors);
-            }
-
-            for (DefaultEdge edge : graph.outgoingEdgesOf(current)) {
-                Node neighbor = graph.getEdgeTarget(edge);
-                if (!visited.contains(neighbor)) {
-                    stack.push(neighbor);
-                    visited.add(neighbor);
-                    predecessors.put(neighbor, current);
-                }
-            }
-        }
-
-        return null;
-    }
-
-    private Path buildPath(Node src, Node dst, Map<Node, Node> predecessors) {
-        Path path = new Path();
-        Node step = dst;
-
-        while (step != null) {
-            path.addNode(step);
-            step = predecessors.get(step);
-        }
-
-        Collections.reverse(path.getNodes());
-        return path;
-    }
-
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Graph: \n");
+        StringBuilder sb = new StringBuilder("Graph: \n");
         sb.append("Nodes: ").append(graph.vertexSet().size()).append("\n");
         sb.append("Edges: ").append(graph.edgeSet().size()).append("\n");
-        for (DefaultEdge edge : graph.edgeSet()) {
+
+        graph.edgeSet().forEach(edge -> {
             Node source = graph.getEdgeSource(edge);
             Node target = graph.getEdgeTarget(edge);
             sb.append(source).append(" -> ").append(target).append("\n");
-        }
-        for (Node vertex : graph.vertexSet()) {
-            if (graph.edgesOf(vertex).isEmpty()) {
-                sb.append(vertex).append("\n");
-            }
-        }
+        });
+
+        graph.vertexSet().stream()
+                .filter(vertex -> graph.edgesOf(vertex).isEmpty())
+                .forEach(vertex -> sb.append(vertex).append("\n"));
+
         return sb.toString();
     }
 }

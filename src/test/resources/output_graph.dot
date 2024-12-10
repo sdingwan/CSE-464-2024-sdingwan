@@ -4,5 +4,4 @@ digraph G {
 	C;
 	A -> B;
 	B -> C;
-	A -> C;
 }
