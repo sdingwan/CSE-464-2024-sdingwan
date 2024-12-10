@@ -3,28 +3,34 @@ import org.jgrapht.graph.DefaultEdge;
 
 import java.util.*;
 
-public class BFS implements GraphTraversalStrategy {
+public class BFS extends GraphTraversalTemplate {
+    private final Map<Node, Node> predecessors = new HashMap<>();
+
+    public BFS(Graph<Node, DefaultEdge> graph) {
+        super(graph);
+    }
 
     @Override
-    public Path traverse(Graph<Node, DefaultEdge> graph, Node source, Node destination) {
-        // Validate if the source and destination nodes exist
-        if (!graph.containsVertex(source) || !graph.containsVertex(destination)) {
-            throw new IllegalArgumentException("One or both nodes do not exist in the graph.");
-        }
+    protected void initializeTraversal(Node source) {
+        // Clear any previous state
+        predecessors.clear();
+        predecessors.put(source, null);
+        System.out.println("Initializing BFS traversal. Starting at node: " + source);
+    }
 
-        // Initialize data structures for BFS traversal
-        Map<Node, Node> predecessors = new HashMap<>();
+    @Override
+    protected void performTraversal(Node source, Node destination) {
         Queue<Node> queue = new LinkedList<>();
         queue.add(source);
-        predecessors.put(source, null);
 
         // Perform BFS traversal
         while (!queue.isEmpty()) {
             Node current = queue.poll();
 
-            // If destination is reached, build the path
+            // If destination is reached, stop traversal
             if (current.equals(destination)) {
-                return buildPath(destination, predecessors);
+                System.out.println("Destination node found: " + destination);
+                break;
             }
 
             // Process neighbors
@@ -33,27 +39,15 @@ public class BFS implements GraphTraversalStrategy {
                 if (!predecessors.containsKey(neighbor)) {
                     queue.add(neighbor);
                     predecessors.put(neighbor, current);
+                    System.out.println("Visiting node: " + neighbor);
                 }
             }
         }
-
-        // Return null if no path exists
-        return null;
     }
 
-    // Helper method to build the path from the predecessors map
-    private Path buildPath(Node destination, Map<Node, Node> predecessors) {
-        Path path = new Path();
-        Node step = destination;
-
-        // Trace back from the destination to the source using the predecessors map
-        while (step != null) {
-            path.addNode(step);
-            step = predecessors.get(step);
-        }
-
-        // Reverse the path to get the correct order
-        Collections.reverse(path.getNodes());
-        return path;
+    @Override
+    protected Node getPredecessor(Node node) {
+        // Retrieve the predecessor of the given node
+        return predecessors.get(node);
     }
 }

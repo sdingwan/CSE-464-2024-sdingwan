@@ -163,22 +163,22 @@ public class GraphParserTest {
     }
     @Test
     public void testGraphSearchRandomWalk() throws IOException {
-        // Parse the graph from the DOT file
         parser.parseGraph("src/test/resources/sample_random_walk.dot");
 
         Node nodeA = new Node("A");
-        Node nodeC = new Node("C");
+        Node nodeH = new Node("H");
 
-        // Run the random walk multiple times to test randomness
         for (int i = 0; i < 5; i++) {
-            System.out.println("Random testing:");
-            Path randomWalkPath = parser.graphSearch(nodeA, nodeC, GraphParser.Algorithm.RANDOM_WALK);
-            if (randomWalkPath != null) {
-                System.out.println("Path found: " + randomWalkPath);
+            System.out.println("Random Walk Test Run " + (i + 1) + ":");
+            Path randomWalkPath = parser.graphSearch(nodeA, nodeH, GraphParser.Algorithm.RANDOM_WALK);
+            if (randomWalkPath != null && randomWalkPath.getNodes().contains(nodeH)) {
+                System.out.println("");
             } else {
-                System.out.println("Random walk failed to find a path.");
+                System.out.println("Random walk failed to find a path to the destination.");
             }
         }
     }
+
+
 
 }

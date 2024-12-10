@@ -96,20 +96,19 @@ public class GraphParser {
     }
 
     public Path graphSearch(Node sourceNode, Node destinationNode, Algorithm algo) {
-        GraphTraversalStrategy strategy;
+        GraphTraversalTemplate traversalTemplate;
 
-        // Select the strategy dynamically based on the algorithm parameter
+        // Select the appropriate traversal strategy dynamically
         switch (algo) {
-            case BFS -> strategy = new BFS();
-            case DFS -> strategy = new DFS();
-            case RANDOM_WALK -> strategy = new RandomWalk();
+            case BFS -> traversalTemplate = new BFS(graph);
+            case DFS -> traversalTemplate = new DFS(graph);
+            case RANDOM_WALK -> traversalTemplate = new RandomWalk(graph);
             default -> throw new IllegalArgumentException("Unsupported algorithm: " + algo);
         }
 
         // Use the selected strategy to perform the traversal
-        return strategy.traverse(graph, sourceNode, destinationNode);
+        return traversalTemplate.traverse(sourceNode, destinationNode);
     }
-
 
     public void removeNode(Node node) {
         if (!graph.containsVertex(node)) {
